@@ -98,99 +98,138 @@ void square(double a)
     glEnd();
 }
 
-void draw_cylinder_half(double radious, double height)
+vector<Point> cylinder_Points(double radious)
 {
-
-    int segments = 100;
-
-    double radius = radious;
-    struct Point points[segments + 1];
+    vector<Point> points;
 
     double offset = 70.5287794 * M_PI / 180.0;
 
-    for (int i = 0; i < segments + 1; i++)
+    for (int i = 0; i < 101; i++)
     {
-        double theta = -offset / 2 + i * offset / segments;
-        points[i].x = radius * cos(theta);
-        points[i].y = radius * sin(theta);
+        Point p;
+        double theta = -offset / 2 + i * offset / 100;
+        p.x = radious * cos(theta);
+        p.y = radious * sin(theta);
+        points.push_back(p);
     }
+    return points;
+}
 
-    glBegin(GL_QUADS);
-    for (int i = 0; i < segments; i++)
+void draw_cylinder_half(double radious, double height)
+{
+    if (radious < 0)
     {
-        glVertex3f(points[i].x, points[i].y, height / 2);
-        glVertex3f(points[i].x, points[i].y, -height / 2);
-        glVertex3f(points[i + 1].x, points[i + 1].y, -height / 2);
-        glVertex3f(points[i + 1].x, points[i + 1].y, height / 2);
+        printf("Cylinder radius is negative\n");
+        return;
     }
-    glEnd();
+    if (height > 0)
+    {
+        int numOfSegment = 100;
+        vector<Point> points = cylinder_Points(radious);
+        glBegin(GL_QUADS);
+        for (int i = 0; i < numOfSegment; i++)
+        {
+            glVertex3f(points[i].x, points[i].y, height / 2);
+            glVertex3f(points[i].x, points[i].y, -height / 2);
+            glVertex3f(points[i + 1].x, points[i + 1].y, -height / 2);
+            glVertex3f(points[i + 1].x, points[i + 1].y, height / 2);
+        }
+        glEnd();
+    }
+    else
+    {
+        printf("Cylinder height is 0\n");
+    }
 }
 void draw_cylinder()
 {
     double height = currentTriangleSide * sqrt(2.0);
     double radious = currentSphereRadius;
 
-    for (int j = 0; j < 2; j++)
+    if (radious > 0)
     {
-        glPushMatrix();
+
+        if (height > 0)
         {
-            glRotatef(180 * j, 0, 1, 0);
-            for (int i = 0; i < 4; i++)
+
+            for (int j = 0; j < 2; j++)
             {
                 glPushMatrix();
                 {
-                    // yellow cylinder
-                    glColor3f(1, 1, 0);
-                    glRotatef(90 * i, 0, 0, 1);
-                    glRotatef(45, 0, 1, 0);
-                    glTranslatef(currentTriangleSide / sqrt(2.0), 0, 0);
-                    draw_cylinder_half(radious, height);
+                    glRotatef(180 * j, 0, 1, 0);
+                    for (int i = 0; i < 4; i++)
+                    {
+                        glPushMatrix();
+                        {
+                            // yellow cylinder
+                            glColor3f(1, 1, 0);
+                            glRotatef(90 * i, 0, 0, 1);
+                            glRotatef(45, 0, 1, 0);
+                            glTranslatef(currentTriangleSide / sqrt(2.0), 0, 0);
+                            draw_cylinder_half(radious, height);
+                        }
+                        glPopMatrix();
+                    }
                 }
                 glPopMatrix();
             }
         }
-        glPopMatrix();
+        else
+        {
+            printf("Cylinder height is 0\n");
+        }
+    }
+    else
+    {
+        printf("Cylinder radius is 0\n");
     }
 
-    for (int i = 0; i < 4; i++)
+    if (height > 0 && radious > 0)
     {
-        glPushMatrix();
+
+        for (int i = 0; i < 4; i++)
         {
-            glColor3f(1, 1, 0);
-            glRotatef(90 * i, 0, 0, 1);
-            glTranslatef(currentTriangleSide / 2, currentTriangleSide / 2, 0);
-            glRotatef(45, 0, 0, 1);
-            glRotatef(90, 1, 0, 0);
-            draw_cylinder_half(radious, height);
+            glPushMatrix();
+            {
+                glColor3f(1, 1, 0);
+                glRotatef(90 * i, 0, 0, 1);
+                glTranslatef(currentTriangleSide / 2, currentTriangleSide / 2, 0);
+                glRotatef(45, 0, 0, 1);
+                glRotatef(90, 1, 0, 0);
+                draw_cylinder_half(radious, height);
+            }
+            glPopMatrix();
         }
-        glPopMatrix();
+    }
+    else
+    {
+        printf("Cylinder height is 0\n");
     }
 }
 
-
 vector<vector<Point>> buildUnitPositiveX(int subdivision)
 {
-    const float DEG2RAD = acos(-1) / 180.0f;
+    const float radian = acos(-1) / 180.0f;
 
     int pointsPerRow = (int)pow(2, subdivision) + 1;
 
     vector<vector<Point>> vertices(pointsPerRow);
-    float n1[3]; 
-    float n2[3]; 
-    float v[3];  
-    float a1;   
-    float a2;    
+    float n1[3];
+    float n2[3];
+    float v[3];
+    float a1;
+    float a2;
 
     for (unsigned int i = 0; i < pointsPerRow; ++i)
     {
-        a2 = DEG2RAD * (45.0f - 90.0f * i / (pointsPerRow - 1));
+        a2 = radian * (45.0f - 90.0f * i / (pointsPerRow - 1));
         n2[0] = -sin(a2);
         n2[1] = cos(a2);
         n2[2] = 0;
 
         for (unsigned int j = 0; j < pointsPerRow; ++j)
         {
-            a1 = DEG2RAD * (-45.0f + 90.0f * j / (pointsPerRow - 1));
+            a1 = radian * (-45.0f + 90.0f * j / (pointsPerRow - 1));
             n1[0] = -sin(a1);
             n1[1] = 0;
             n1[2] = -cos(a1);
@@ -230,37 +269,53 @@ void drawOneFace(int subdivision)
 
 void draw_sphere()
 {
-    double traslaseLength = currentTriangleSide;
-    for (int i = 0; i < 4; i++)
+    if (currentSphereRadius > 0)
     {
-        glPushMatrix();
+        double traslaseLength = currentTriangleSide;
+        for (int i = 0; i < 4; i++)
         {
-            glColor3f(0, i % 2, (i + 1) % 2);
-            glRotatef(90 * i, 0, 0, 1);
-            glTranslatef(traslaseLength, 0, 0);
-            glScalef(currentSphereRadius, currentSphereRadius, currentSphereRadius);
-            drawOneFace(6);
+            glPushMatrix();
+            {
+                glColor3f(0, i % 2, (i + 1) % 2);
+                glRotatef(90 * i, 0, 0, 1);
+                glTranslatef(traslaseLength, 0, 0);
+                glScalef(currentSphereRadius, currentSphereRadius, currentSphereRadius);
+                drawOneFace(6);
+            }
+            glPopMatrix();
         }
-        glPopMatrix();
     }
-    for (int i = 0; i < 2; i++)
+    else
     {
-        glPushMatrix();
+        printf("Sphere radius is 0\n");
+    }
+    if (currentSphereRadius > 0)
+    {
+        for (int i = 0; i < 2; i++)
         {
-            glColor3f(1, 0, 0);
-            glRotatef(180 * i, 0, 1, 0);
-            glRotatef(90, 0, 1, 0);
-            glTranslatef(traslaseLength, 0, 0);
-            glScalef(currentSphereRadius, currentSphereRadius, currentSphereRadius);
-            drawOneFace(6);
+            double traslaseLength = currentTriangleSide;
+
+            glPushMatrix();
+            {
+                glColor3f(1, 0, 0);
+                glRotatef(180 * i, 0, 1, 0);
+                glRotatef(90, 0, 1, 0);
+                glTranslatef(traslaseLength, 0, 0);
+                glScalef(currentSphereRadius, currentSphereRadius, currentSphereRadius);
+                drawOneFace(6);
+            }
+            glPopMatrix();
         }
-        glPopMatrix();
+    }
+    else
+    {
+        printf("Sphere radius is 0\n");
     }
 }
 
-void drawTriangle()
+void drawTriangle(double scale)
 {
-
+    glScalef(scale, scale, scale);
     glBegin(GL_TRIANGLES);
     {
         glVertex3f(1, 0, 0);
@@ -272,26 +327,34 @@ void drawTriangle()
 void draw_octahedron()
 {
 
-    for (int j = 0; j < 2; j++)
+    if (currentTriangleSide > 0)
     {
-        glPushMatrix();
-        {
-            glRotatef(180 * j, 0, 1, 0);
 
-            for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 2; j++)
+        {
+            glPushMatrix();
             {
-                glPushMatrix();
+                glRotatef(180 * j, 0, 1, 0);
+                for (int i = 0; i < 4; i++)
                 {
-                    glColor3f((i + 1) % 2, i % 2, 1.0);
-                    glRotatef(90 * i, 0, 0, 1);
-                    glTranslatef((maxTriangleSide - currentTriangleSide) / 3.0,(maxTriangleSide - currentTriangleSide) / 3.0, (maxTriangleSide - currentTriangleSide) / 3.0);
-                    glScalef(currentTriangleSide, currentTriangleSide, currentTriangleSide);
-                    drawTriangle();
+                    double traslaseLength = maxTriangleSide - currentTriangleSide;
+                    traslaseLength /= 3.0;
+                    glPushMatrix();
+                    {
+                        glColor3f((i + 1) % 2, i % 2, 1.0);
+                        glRotatef(90 * i, 0, 0, 1);
+                        glTranslatef(traslaseLength, traslaseLength, traslaseLength);
+                        drawTriangle(currentTriangleSide);
+                    }
+                    glPopMatrix();
                 }
-                glPopMatrix();
             }
+            glPopMatrix();
         }
-        glPopMatrix();
+    }
+    else
+    {
+        printf("Triangle side is 0\n");
     }
 }
 
