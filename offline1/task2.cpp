@@ -40,12 +40,19 @@ struct Point
 };
 
 // global variables
-
-Point cameraPos(50, 20, 50);
-Point cameraLook(-1, 0, 0);
+Point cameraPos(30, 70, 30);
+Point cameraLook(0, 0, 0);
 Point cameraUp(0, 0, 1);
-Point cameraRight(0, 1, 0);
+Point cameraRight(1, 0, 0);
 
+Point sphereCenter(0, 5, 5);
+Point sphereUp(0, 0, 1);
+Point sphereFront(1, 0, 0);
+
+double rotationAngle = 5.0;
+double maxBorderlength=40;
+double sphereRadious=5.0;
+bool simulation = false;
 
 void axes()
 {
@@ -78,41 +85,293 @@ void axes()
     glEnd();
 }
 
-void draw_plane(){
-    
-    int perUnit=10;
-    int maxi=10*perUnit;
+void draw_plane()
+{
 
-       // Draw a 2D grid with each square representing a one-unit area
-    for (int i = -maxi; i < maxi; i+=perUnit)
+    int perUnit = 10;
+    int maxi = 10 * perUnit;
+
+    // Draw a 2D grid with each square representing a one-unit area
+    for (int i = -maxi; i < maxi; i += perUnit)
     {
-        for (int j = -maxi; j < maxi; j+=perUnit)
+        for (int j = -maxi; j < maxi; j += perUnit)
         {
-            if ((i+j)% (2*perUnit) == 0)
-                glColor3f(1.0f, 1.0f, 1.0f);  // White
+            if ((i + j) % (2 * perUnit) == 0)
+                glColor3f(1.0f, 1.0f, 1.0f); // White
             else
-                glColor3f(0.5f, 0.5f, 0.5f);  // Gray
+                glColor3f(0.5f, 0.5f, 0.5f); // Gray
 
             // Draw each square
             glBegin(GL_QUADS);
             {
-                glVertex3f(i, j, 0);       // Bottom-left corner
-                glVertex3f(i + perUnit, j, 0);   // Bottom-right corner
+                glVertex3f(i, j, 0);                     // Bottom-left corner
+                glVertex3f(i + perUnit, j, 0);           // Bottom-right corner
                 glVertex3f(i + perUnit, j + perUnit, 0); // Top-right corner
-                glVertex3f(i, j + perUnit, 0);   // Top-left corner
+                glVertex3f(i, j + perUnit, 0);           // Top-left corner
             }
             glEnd();
         }
     }
-
-
 }
 
-void draw_border(){
+void go_forward()
+{
+    
+
+    if(sphereCenter.x + 5.0 > maxBorderlength){
+        sphereFront.x = -sphereFront.x;
+    }
+    else if(sphereCenter.x - 5.0 < -maxBorderlength){
+        sphereFront.x = -sphereFront.x;
+    }
+    if(sphereCenter.y + 5.0 > maxBorderlength){
+        sphereFront.y = -sphereFront.y;
+    }
+    else if(sphereCenter.y - 5.0 < -maxBorderlength){
+        sphereFront.y = -sphereFront.y;
+    }
+    sphereCenter.x += sphereFront.x;
+    sphereCenter.y += sphereFront.y;
+    sphereCenter.z += sphereFront.z;
+
+    double length=sqrt(sphereFront.x*sphereFront.x+sphereFront.y*sphereFront.y+sphereFront.z*sphereFront.z);
+    double theta=length/sphereRadious;
+    theta=theta*180/pi;
+    rotationAngle+=theta;
 
 
+    
 }
 
+void go_backward()
+{
+
+    if(sphereCenter.x + 5.0 > maxBorderlength){
+        sphereFront.x = -sphereFront.x;
+    }
+    else if(sphereCenter.x - 5.0 < -maxBorderlength){
+        sphereFront.x = -sphereFront.x;
+    }
+    if(sphereCenter.y + 5.0 > maxBorderlength){
+        sphereFront.y = -sphereFront.y;
+    }
+    else if(sphereCenter.y - 5.0 < -maxBorderlength){
+        sphereFront.y = -sphereFront.y;
+    }
+
+
+    sphereCenter.x -= sphereFront.x;
+    sphereCenter.y -= sphereFront.y;
+    sphereCenter.z -= sphereFront.z;
+    double length=sqrt(sphereFront.x*sphereFront.x+sphereFront.y*sphereFront.y+sphereFront.z*sphereFront.z);
+    double theta=length/sphereRadious;
+    theta=theta*180/pi;
+    rotationAngle-=theta;
+}
+
+void clockwise_rotate(){
+    double rotate = -0.2;
+    double x, y, z;
+    Point p1(0, 0, 0);
+    // cross product of sphere up and sphere front
+    p1.x = (sphereUp.y * sphereFront.z) - (sphereFront.y * sphereUp.z);
+    p1.y = (sphereUp.z * sphereFront.x) - (sphereFront.z * sphereUp.x);
+    p1.z = (sphereUp.x * sphereFront.y) - (sphereFront.x * sphereUp.y);
+
+    x = sphereFront.x * cos(rotate) + p1.x * sin(rotate);
+    y = sphereFront.y * cos(rotate) + p1.y * sin(rotate);   
+    z = sphereFront.z * cos(rotate) + p1.z * sin(rotate);
+
+    sphereFront.x = x;
+    sphereFront.y = y;
+    sphereFront.z = z;
+}
+
+void anticlockwise_rotate(){
+    double rotate = 0.2;
+
+
+    double x, y, z;
+    Point p1(0, 0, 0);
+    // cross product of sphere up and sphere front
+    p1.x = (sphereUp.y * sphereFront.z) - (sphereFront.y * sphereUp.z);
+    p1.y = (sphereUp.z * sphereFront.x) - (sphereFront.z * sphereUp.x);
+    p1.z = (sphereUp.x * sphereFront.y) - (sphereFront.x * sphereUp.y);
+
+    x = sphereFront.x * cos(rotate) + p1.x * sin(rotate);
+    y = sphereFront.y * cos(rotate) + p1.y * sin(rotate);
+    z = sphereFront.z * cos(rotate) + p1.z * sin(rotate);
+
+    sphereFront.x = x;
+    sphereFront.y = y;
+    sphereFront.z = z;
+}
+
+void draw_border_oneSide(double borderLength)
+{
+
+    double borderHeight = 1.0;
+
+    glBegin(GL_QUADS);
+    {
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glVertex3f(0, 0, 0);
+        glVertex3f(borderLength, 0, 0);
+        glVertex3f(borderLength, 0, borderHeight);
+        glVertex3f(0, 0, borderHeight);
+    }
+    glEnd();
+}
+void draw_border()
+{
+
+    double borderLength = 2*maxBorderlength;
+
+    for(int i=0; i<4; i++){
+        glPushMatrix();
+        {
+            glRotatef(i*90, 0, 0, 1);
+            // glRotatef(90, borderLength/2, 0, 1);
+            glTranslatef(0, borderLength/2, 0);
+            glTranslatef(-borderLength/2, 0, 0);
+            draw_border_oneSide(borderLength);
+        }
+        glPopMatrix();
+    }
+}
+void draw_sphere_only(double radious)
+{
+
+    int stack = 20;
+    int sector = 20;
+    double stack_angle;
+    double sector_angle;
+
+    Point mat[stack + 1][sector + 1];
+
+    double x, y, z;
+    for (int i = 0; i <= stack; i++)
+    {
+        for (int j = 0; j <= sector; j++)
+        {
+
+            stack_angle = (pi / 2) - (i * (pi / stack));
+            sector_angle = j * (2 * pi / sector);
+            x = radious * cos(stack_angle) * cos(sector_angle);
+            y = radious * cos(stack_angle) * sin(sector_angle);
+            z = radious * sin(stack_angle);
+
+            mat[i][j].x = x;
+            mat[i][j].y = y;
+            mat[i][j].z = z;
+        }
+    }
+
+    for (int i = 0; i < stack; i++)
+    {
+        for (int j = 0; j < sector; j++)
+        {
+
+            glBegin(GL_QUADS);
+            {
+                glColor3f(i % 2, j % 2, (i + j) % 2);
+                glVertex3f(mat[i][j].x, mat[i][j].y, mat[i][j].z);
+                glVertex3f(mat[i][j + 1].x, mat[i][j + 1].y, mat[i][j + 1].z);
+                glVertex3f(mat[i + 1][j + 1].x, mat[i + 1][j + 1].y, mat[i + 1][j + 1].z);
+                glVertex3f(mat[i + 1][j].x, mat[i + 1][j].y, mat[i + 1][j].z);
+            }
+            glEnd();
+        }
+    }
+}
+void draw_sphere(double radious)
+{
+
+    Point p1(0, 0, 0);
+    // cross product of sphere up and sphere front
+    p1.x = (sphereUp.y * sphereFront.z) - (sphereFront.y * sphereUp.z);
+    p1.y = (sphereUp.z * sphereFront.x) - (sphereFront.z * sphereUp.x);
+    p1.z = (sphereUp.x * sphereFront.y) - (sphereFront.x * sphereUp.y);
+
+
+    glPushMatrix();
+    {
+        glTranslatef(sphereCenter.x, sphereCenter.y, sphereCenter.z);
+        glRotatef(rotationAngle, p1.x, p1.y, p1.z);
+        draw_sphere_only(radious);
+    }
+    glPopMatrix();
+}
+
+void draw_cylinder()
+{
+    double radious = 0.5;
+    double height = 15.0;
+    int sector = 20;
+    double sector_angle = 2 * pi / sector;
+
+    for (int i = 0; i < sector; i++)
+    {
+
+        glBegin(GL_QUADS);
+        {
+            glVertex3f(0, 0, 0);
+            glVertex3f(radious * cos(i * sector_angle), radious * sin(i * sector_angle), 0);
+            glVertex3f(radious * cos((i + 1) * sector_angle), radious * sin((i + 1) * sector_angle), 0);
+            glVertex3f(0, 0, 0);
+        }
+        glEnd();
+
+        glBegin(GL_QUADS);
+        {
+            glVertex3f(0, 0, height);
+            glVertex3f(radious * cos(i * sector_angle), radious * sin(i * sector_angle), height);
+            glVertex3f(radious * cos((i + 1) * sector_angle), radious * sin((i + 1) * sector_angle), height);
+            glVertex3f(0, 0, height);
+        }
+        glEnd();
+
+        glBegin(GL_QUADS);
+        {
+            glVertex3f(radious * cos(i * sector_angle), radious * sin(i * sector_angle), 0);
+            glVertex3f(radious * cos((i + 1) * sector_angle), radious * sin((i + 1) * sector_angle), 0);
+            glVertex3f(radious * cos((i + 1) * sector_angle), radious * sin((i + 1) * sector_angle), height);
+            glVertex3f(radious * cos(i * sector_angle), radious * sin(i * sector_angle), height);
+        }
+        glEnd();
+    }
+}
+
+void draw_right_vector()
+{
+
+    Point p1(0, 0, 0);
+    double rotate = 90.0;
+    // cross product of sphere up and sphere front
+    p1.x = (sphereUp.y * sphereFront.z) - (sphereFront.y * sphereUp.z);
+    p1.y = (sphereUp.z * sphereFront.x) - (sphereFront.z * sphereUp.x);
+    p1.z = (sphereUp.x * sphereFront.y) - (sphereFront.x * sphereUp.y);
+
+    glPushMatrix();
+    {
+        glColor3f(1, 0, 0);
+        glTranslatef(sphereCenter.x, sphereCenter.y, sphereCenter.z);
+        glRotatef(rotate, p1.x, p1.y, p1.z);
+        draw_cylinder();
+    }
+    glPopMatrix();
+}
+
+void draw_Up_vector()
+{
+    glPushMatrix();
+    {
+        glColor3f(0, 1, 0);
+        glTranslatef(sphereCenter.x, sphereCenter.y, sphereCenter.z);
+        draw_cylinder();
+    }
+    glPopMatrix();
+}
 
 void display()
 {
@@ -124,18 +383,17 @@ void display()
     glLoadIdentity();
 
     gluLookAt(cameraPos.x, cameraPos.y, cameraPos.z,
-              cameraLook.x, cameraLook.y, cameraLook.z,
+              cameraPos.x + cameraLook.x, cameraPos.y + cameraLook.y, cameraPos.z + cameraLook.z,
               cameraUp.x, cameraUp.y, cameraUp.z);
 
     axes();
     draw_plane();
     draw_border();
+    draw_sphere(5.0);
+    draw_right_vector();
+    draw_Up_vector();
 
     glutSwapBuffers();
-
-    
-
-
 }
 
 void init()
@@ -144,15 +402,21 @@ void init()
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
     gluPerspective(80, 1, 1, 1000);
+    cameraLook.x = (cameraRight.y * cameraUp.z) - (cameraUp.y * cameraRight.z);
+    cameraLook.y = (cameraRight.z * cameraUp.x) - (cameraUp.z * cameraRight.x);
+    cameraLook.z = (cameraRight.x * cameraUp.y) - (cameraUp.x * cameraRight.y);
 }
 
 void idle()
 {
-    // printf("Idle\n");
+    printf("Idle\n");
     glutPostRedisplay();
 }
 void Timer(int value)
 {
+    if(simulation){
+        go_forward();
+    }
     // printf("Timer\n");
     glutPostRedisplay();
     glutTimerFunc(10, Timer, 0);
@@ -160,7 +424,7 @@ void Timer(int value)
 
 void keyboardHandler(unsigned char key, int x, int y)
 {
-    double rotation_angle = 5.0;
+    double rotation_angle = .01;
     switch (key)
     {
     case '1':
@@ -224,7 +488,27 @@ void keyboardHandler(unsigned char key, int x, int y)
         cameraRight.z = (cameraRight.z * cos(-rotation_angle)) - (cameraUp.z * sin(-rotation_angle));
         break;
 
-    
+    case 'j':
+        printf("j pressed\n");
+        clockwise_rotate();
+        break;
+    case 'l':
+        printf("l pressed\n");
+        anticlockwise_rotate();
+        break;
+    case 'i':
+        printf("i pressed\n");
+        go_forward();
+        break;
+    case 'k':
+        printf("k pressed\n");
+        go_backward();
+        break;
+
+    case ' ':
+        printf("space pressed\n");
+        simulation = !simulation;
+        break;
     case 'q':
         printf("q pressed\n");
         exit(0);
@@ -299,7 +583,7 @@ int main(int argc, char **argv)
     glutKeyboardFunc(keyboardHandler);
     glutSpecialFunc(specialKeyHandler);
 
-    glutIdleFunc(idle);
+    // glutIdleFunc(idle);
     glutTimerFunc(10, Timer, 0);
 
     glutMainLoop();
