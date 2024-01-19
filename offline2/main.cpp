@@ -29,6 +29,12 @@ struct Matrix
 
 Point eye, look, up;
 double fovY, aspectRatio, near, far;
+static unsigned long int g_seed = 1;
+inline int randNum()
+{
+    g_seed = (214013 * g_seed + 2531011);
+    return (g_seed >> 16) & 0x7FFF;
+}
 
 void readSceneFile();
 void stage1();
@@ -47,17 +53,11 @@ Point normalizedVector(Point p);
 Point scalarMultiply(Point p, double s);
 Point rodriguesFormula(Point p, Point a, double angle);
 vector<Point> rearrangrTrianglePoints(vector<Point> triangle);
-static unsigned long int g_seed = 1;
-inline int randNum()
-{
-    g_seed = (214013 * g_seed + 2531011);
-    return (g_seed >> 16) & 0x7FFF;
-}
 
 int main()
 {
     cout << "hello" << endl;
-    string filepath = "TestCase/1/scene.txt";
+    string filepath = "TestCase/5/scene.txt";
     input1.open(filepath);
     if (!input1.is_open())
     {
@@ -66,7 +66,6 @@ int main()
     }
     readSceneFile();
     stage1();
-    input1.close();
     cout << "stage 1 done" << endl;
     stage2();
     cout << "stage 2 done" << endl;
@@ -91,6 +90,13 @@ void readSceneFile()
 Matrix getIdentityMatrix()
 {
     Matrix m;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            m.mat[i][j] = 0;
+        }
+    }
     for (int i = 0; i < 4; i++)
     {
         m.mat[i][i] = 1;
@@ -264,10 +270,17 @@ void stage1()
 
     while (1)
     {
+        if (input1.eof())
+        {
+            output.close();
+            input1.close();
+            return;
+        }
         input1 >> command;
         if (command == "end")
         {
             output.close();
+            input1.close();
             return;
         }
         else if (command == "triangle")
@@ -437,7 +450,7 @@ void stage3()
 void stage4()
 {
     ifstream input4("stage3.txt");
-    ifstream input5("TestCase/1/config.txt");
+    ifstream input5("TestCase/5/config.txt");
     ofstream output("z_buffer.txt");
     output << fixed << setprecision(7);
     int screenHeight, screenWidth;
@@ -459,7 +472,7 @@ void stage4()
     double leftX = LeftLimit + dx / 2.0;
     double rightX = RightLimit - dx / 2.0;
 
-    cout << "dx: " << dx << " dy: " << dy << endl;
+    // cout << "dx: " << dx << " dy: " << dy << endl;
 
     double **zbuffer = new double *[screenHeight];
     for (int i = 0; i < screenHeight; i++)
@@ -525,7 +538,7 @@ void stage4()
         int upperLine = round((topY - maxY) / dy);
         int lowerLine = round((topY - minY) / dy);
 
-        cout << upperLine << " " << lowerLine << endl;
+        // cout << upperLine << " " << lowerLine << endl;
 
         for (int row = upperLine; row <= lowerLine; row++)
         {
@@ -537,22 +550,23 @@ void stage4()
             z_a = z_b = 0;
             temp_a = temp_b = 0;
 
-            bool flag = true;
+            int count = 0;
             for (int i = 0; i < 3; i++)
             {
                 int j = (i + 1) % 3;
                 if (triangle[i].y == triangle[j].y)
                 {
-                    continue;
+                    x_a = triangle[i].x;
+                    x_b = triangle[j].x;
                 }
                 if (y >= min(triangle[i].y, triangle[j].y) && y <= max(triangle[i].y, triangle[j].y))
                 {
-                    if (flag)
+                    if (count == 0)
                     {
 
                         temp_a = triangle[i].x - (triangle[i].x - triangle[j].x) * (triangle[i].y - y) / (triangle[i].y - triangle[j].y);
                         z_a = triangle[i].z - (triangle[i].z - triangle[j].z) * (triangle[i].y - y) / (triangle[i].y - triangle[j].y);
-                        flag = false;
+                        count++;
                     }
 
                     else
@@ -563,81 +577,46 @@ void stage4()
                 }
             }
 
-            x_a=temp_a;
-            x_b=temp_b;
-            if(x_a<minX){
-                x_a=minX;
-            }
-            else if(x_a>maxX){
-                x_a=maxX;
-            }
+            x_a = temp_a;
+            x_b = temp_b;
 
-            if(x_b<minX){
-                x_b=minX;
+            if (x_a < minX || x_a > maxX)
+            {
+                if (x_a < minX)
+                {
+                    x_a = minX;
+                }
+                else if (x_a > maxX)
+                {
+                    x_a = maxX;
+                }
             }
-            else if(x_b>maxX){
-                x_b=maxX;
+            if (x_b < minX || x_b > maxX)
+            {
+                if (x_b < minX)
+                {
+                    x_b = minX;
+                }
+                else if (x_b > maxX)
+                {
+                    x_b = maxX;
+                }
             }
 
             // cout<<"x_a: "<<x_a<<" x_b: "<<x_b<<endl;
 
-            z_a = z_b-(z_b-z_a)*(temp_b-x_a)/(temp_b-temp_a);
-            z_b = z_b-(z_b-z_a)*(temp_b-x_b)/(temp_b-temp_a);
+            z_a = z_b - (z_b - z_a) * (temp_b - x_a) / (temp_b - temp_a);
+            z_b = z_b - (z_b - z_a) * (temp_b - x_b) / (temp_b - temp_a);
 
-            if(x_a>x_b){
-                swap(x_a,x_b);
-                swap(z_a,z_b);
+            if (x_a > x_b)
+            {
+                temp_a = x_a;
+                x_a = x_b;
+                x_b = temp_a;
+                temp_a = z_a;
+                z_a = z_b;
+                z_b = temp_a;
             }
-
-
-
-            // int count = 0;
-            // for (int i = 0; i < 3; i++)
-            // {
-            //     int j = (i + 1) % 3;
-
-            //     if (triangle[i].y == triangle[j].y)
-            //     {
-            //         continue;
-            //     }
-            //     if (y >= min(triangle[i].y, triangle[j].y) && y <= max(triangle[i].y, triangle[j].y))
-            //     {
-            //         x[count] = triangle[i].x - (triangle[i].x - triangle[j].x) * (triangle[i].y - y) / (triangle[i].y - triangle[j].y);
-            //         x[count] = triangle[i].z - (triangle[i].z - triangle[j].z) * (triangle[i].y - y) / (triangle[i].y - triangle[j].y);
-            //     }
-            // }
-
-            // double temp[2];
-            // temp[0]=x[0];
-            // temp[1]=x[1];
-
-            // for (int i = 0; i < 2; i++)
-            // {
-            //     // clip x on both sides
-            //     if (x[i] < minX)
-            //         x[i] = minX;
-            //     if (x[i] > maxX)
-            //         x[i] = maxX;
-            // }
-
-            // // re-adjust
-            // z[0] = z[1] - (z[1] - z[0]) * (temp[1] - x[0]) / (temp[1] - temp[0]);
-            // z[1] = z[1] - (z[1] - z[0]) * (temp[1] - x[1]) / (temp[1] - temp[0]);
-            // double x_a,x_b;
-            // double z_a,z_b;
-
-            // if(x[0]>=x[1]){
-            //     x_a=x[1];
-            //     x_b=x[0];
-            //     z_a=z[1];
-            //     z_b=z[0];
-            // }
-            // else{
-            //     x_a=x[0];
-            //     x_b=x[1];
-            //     z_a=z[0];
-            //     z_b=z[1];
-            // }
 
             int leftPixel = round((x_a - leftX) / dx);
             int rightPixel = round((x_b - leftX) / dx);
@@ -647,12 +626,13 @@ void stage4()
             for (int col = leftPixel; col <= rightPixel; col++)
             {
                 double x = leftX + col * dx;
-                double z = z_b-(z_b-z_a)*(x-x_b)/(x_a-x_b);
+                double z = z_b - (z_b - z_a) * (x - x_b) / (x_a - x_b);
                 // cout<<"x: "<<x<<" y: "<<y<<" z: "<<z<<endl;
-                if(z<zMin){
-                    continue;   
+                if (z < zMin)
+                {
+                    z= zMin;
                 }
-                if (z < zbuffer[row][col])
+                else if (z < zbuffer[row][col])
                 {
                     zbuffer[row][col] = z;
                     image.set_pixel(col, row, r, g, b);
@@ -660,12 +640,19 @@ void stage4()
             }
         }
     }
-    image.save_image("output1.bmp");
+    image.save_image("output.bmp");
     for (int i = 0; i < screenHeight; i++)
     {
         for (int j = 0; j < screenWidth; j++)
         {
-            output << zbuffer[i][j] << " ";
+            if (zbuffer[i][j] == zMax)
+            {
+                output << "  ";
+            }
+            else
+            {
+                output << zbuffer[i][j] << " ";
+            }
         }
         output << endl;
     }
@@ -677,6 +664,6 @@ void stage4()
         delete[] zbuffer[i];
     }
     delete[] zbuffer;
-
+    image.clear();
     return;
 }
