@@ -26,16 +26,16 @@ void axes()
     glEnd();
 }
 
-void square(double a)
-{
+void square(double a){
     glBegin(GL_QUADS);
     {
-        glVertex2f(0, 0);
+        glVertex2f(0,0);
         glVertex2f(0, a);
         glVertex2f(a, a);
         glVertex2f(a, 0);
     }
     glEnd();
+
 }
 
 void display()
@@ -45,8 +45,8 @@ void display()
 
     axes();
 
-    double x[] = {.5, .5, -.5, -.5};
-    double y[] = {.5, -.5, -.5, .5};
+    double x[] = {.5,.5,-.5,-.5};
+    double y[] = {.5,-.5,-.5,.5};
 
     // for (int i = 0; i < 4; i++)
     // {
@@ -59,14 +59,15 @@ void display()
 
     // }
 
+
     // for (int i = 0; i < 4; i++)
     // {
-    glPushMatrix();
-    glRotatef(counter % 360, 0, 0, 1);
-    glTranslatef(.5, 0.5, 0);
-    square(.1);
-    glPopMatrix();
-    // glTranslatef(-x[i], -y[i], 0);
+        glPushMatrix();
+        glRotatef(counter%360, 0, 0, 1);
+        glTranslatef(.5, 0.5, 0);
+        square(.1);
+        glPopMatrix();
+        // glTranslatef(-x[i], -y[i], 0);
 
     // }
 
