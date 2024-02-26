@@ -58,7 +58,8 @@ double rotationAngle = 0.0;
 int recursionLevel = 0;
 int screenDimension = 0;
 int numberOfObjects = 0;
-
+int point_light_sources = 0;
+int spotlight_source = 0;
 
 void loadData()
 {
@@ -74,26 +75,137 @@ void loadData()
     file >> numberOfObjects;
 
     string object_type;
-    for(int i=0;i<numberOfObjects;i++){
+    for (int i = 0; i < numberOfObjects; i++)
+    {
         file >> object_type;
-        if(object_type == "triangle"){
-            double x,y,z;
-            file >> x >> y >> z;
-            printf("Triangle %lf %lf %lf\n",x,y,z);
+        if (object_type == "triangle")
+        {
+            //             triangle
+            // -20.0 -20.0 0.0	- x1, y1, z1
+            // 20.0 -20.0 0.0	- x2, y2, z2
+            // 0.0 0.0 20.0	- x3, y3, z3
+            // 1.0 0.0 0.0	- color
+            // 0.4 0.2 0.1 0.3	- ambient, diffuse, specular, recursive reflection coefficient
+            // 5		- shininess
+            double x1, y1, z1;
+            file >> x1 >> y1 >> z1;
+            double x2, y2, z2;
+            file >> x2 >> y2 >> z2;
+            double x3, y3, z3;
+            file >> x3 >> y3 >> z3;
+            double colorR, colorG, colorB;
+            file >> colorR >> colorG >> colorB;
+            double ambient, diffuse, specular, recursive;
+            file >> ambient >> diffuse >> specular >> recursive;
+            int shininess;
+            file >> shininess;
+            printf("Triangle pointA %lf %lf %lf \n", x1, y1, z1);
+            printf("Triangle pointB %lf %lf %lf \n", x2, y2, z2);
+            printf("Triangle pointC %lf %lf %lf \n", x3, y3, z3);
+            printf("Triangle color %lf %lf %lf \n", colorR, colorG, colorB);
+            printf("Triangle ambient %lf %lf %lf %lf \n", ambient, diffuse, specular, recursive);
+            printf("Triangle shininess %d \n", shininess);
+
         }
-        else if(object_type == "sphere"){
-            double x,y,z;
-            file >> x >> y >> z;
-            printf("Sphere %lf %lf %lf\n",x,y,z);
+        else if (object_type == "sphere")
+        {
+            // sphere
+            // 40.0 0.0 10.0	- center
+            // 10.0		- radius
+            // 0.0 1.0 0.0	- color
+            // 0.4 0.2 0.2 0.2	- ambient, diffuse, specular, recursive reflection coefficient
+            // 5		- shininess
+
+            double centerX, centerY, centerZ;
+            file >> centerX >> centerY >> centerZ;
+            double radius;
+            file >> radius;
+            double colorR, colorG, colorB;
+            file >> colorR >> colorG >> colorB;
+            double ambient, diffuse, specular, recursive;
+            file >> ambient >> diffuse >> specular >> recursive;
+            int shininess;
+            file >> shininess;
+            printf("Sphere center %lf %lf %lf \n", centerX, centerY, centerZ);
+            printf("Sphere radius %lf \n ", radius);
+            printf("Sphere color %lf %lf %lf \n", colorR, colorG, colorB);
+            printf("Sphere ambient %lf %lf %lf %lf \n ", ambient, diffuse, specular, recursive);
+            printf("Sphere shininess %d \n", shininess);
+
         }
-        else if(object_type == "object"){
-            double x,y,z;
-            file >> x >> y >> z;
-            printf("Cylinder %lf %lf %lf\n",x,y,z);
+        else if (object_type == "general")
+        {
+            // general
+            // 1 1 1 0 0 0 -20 -20 -20 200	- A B C D E F G H I J
+            // 0 0 0 0 0 5	- cube reference point, length, width, height (0 indicates no clipping along this dimension)
+            // 0.0 0.0 1.0	- color
+            // 0.4 0.2 0.1 0.3	- ambient, diffuse, specular, recursive reflection coefficient
+            // 3		- shininess
+            double A, B, C, D, E, F, G, H, I, J;
+            file >> A >> B >> C >> D >> E >> F >> G >> H >> I >> J;
+            double refX, refY, refZ, length, width, height;
+            file >> refX >> refY >> refZ >> length >> width >> height;
+            double colorR, colorG, colorB;
+            file >> colorR >> colorG >> colorB;
+            double ambient, diffuse, specular, recursive;
+            file >> ambient >> diffuse >> specular >> recursive;
+            int shininess;
+            file >> shininess;
+            printf("General A B C D E %lf %lf %lf %lf %lf \n", A, B, C, D, E);
+            printf("General F G H I J %lf %lf %lf %lf %lf \n", F, G, H, I, J);
+            printf("General refX refY refZ %lf %lf %lf \n", refX, refY, refZ);
+            printf("General length width height %lf %lf %lf \n", length, width, height);
+            printf("General color %lf %lf %lf \n", colorR, colorG, colorB);
+            printf("General ambient %lf %lf %lf %lf \n ", ambient, diffuse, specular, recursive);
+            printf("General shininess %d \n", shininess);
+            
         }
+    }
+    file >> point_light_sources;
+    for (int i = 0; i < point_light_sources; i++)
+    {
+        //         4 point light sources
+        // 70.0 70.0 70.0	- position of the 1st point light source
+        // 1.0 0.0 0.0	- color of the 1st point light source
+        // -70 70 70	- position of the 2nd point light source
+        // 0.0 0.0 1.0	- color of the 2nd point light source
+        // 70 -70 70	- position of the 3rd point light source
+        // 1 0 0.0		- color of the 3rd point light source
+        // -70 -70 70	- position of the 4th point light source
+        // 0 1.0 0		- color of the 4th point light source
+
+        double positionX, positionY, positionZ;
+        file >> positionX >> positionY >> positionZ;
+        double colorR, colorG, colorB;
+        file >> colorR >> colorG >> colorB;
+        printf("Point Light Source %lf %lf %lf %lf %lf %lf \n ", positionX, positionY, positionZ, colorR, colorG, colorB);
+    }
+    //     1 spotlight source
+    // 100 100 -200	- position of the 1st spotlight source
+    // 0 1.0 0.0	- color of the 1st spotlight source
+    // 0 0.0 1		- direction of the 1st spotlight source
+    // 12		- cutoff angle (in degree) of the 1st spotlight source
+    file >> spotlight_source;
+    for (int i = 0; i < spotlight_source; i++)
+    {
+        double positionX, positionY, positionZ;
+        file >> positionX >> positionY >> positionZ;
+        double colorR, colorG, colorB;
+        file >> colorR >> colorG >> colorB;
+        double directionX, directionY, directionZ;
+        file >> directionX >> directionY >> directionZ;
+        double cutoff_angle;
+        file >> cutoff_angle;
+        printf("Spotlight Source %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf \n " , positionX, positionY, positionZ, colorR, colorG, colorB, directionX, directionY, directionZ, cutoff_angle);
     }
 
 
+    printf("Recursion Level %d\n", recursionLevel);
+    printf("Screen Dimension %d\n", screenDimension);
+    printf("Number of Objects %d\n", numberOfObjects);
+    printf("Point Light Sources %d\n", point_light_sources);
+    printf("Spotlight Source %d\n", spotlight_source);
+    printf("Data Loaded\n");
 
     file.close();
 }
@@ -127,6 +239,40 @@ void axes()
         glVertex3f(0, 0, 40);
     }
     glEnd();
+}
+void floor()
+{
+
+    //     There will be a floor along the XY-plane
+    // FloorWidth can be 1000 (from origin 500 across each side)
+    // Each Tile Width can be 20
+    // Color should be alternating
+
+    int floorWidth = 1000;
+    int tileWidth = 20;
+    int tileCount = floorWidth / tileWidth;
+    for (int i = -tileCount / 2; i < tileCount / 2; i++)
+    {
+        for (int j = -tileCount / 2; j < tileCount / 2; j++)
+        {
+            if ((i + j) % 2 == 0)
+            {
+                glColor3f(1, 1, 1);
+            }
+            else
+            {
+                glColor3f(0, 0, 0);
+            }
+            glBegin(GL_QUADS);
+            {
+                glVertex3f(i * tileWidth, j * tileWidth, 0);
+                glVertex3f(i * tileWidth + tileWidth, j * tileWidth, 0);
+                glVertex3f(i * tileWidth + tileWidth, j * tileWidth + tileWidth, 0);
+                glVertex3f(i * tileWidth, j * tileWidth + tileWidth, 0);
+            }
+            glEnd();
+        }
+    }
 }
 
 void square(double a)
@@ -529,7 +675,7 @@ void display()
               cameraUp.x, cameraUp.y, cameraUp.z);
 
     axes();
-
+    floor();
     glPushMatrix();
     {
 
@@ -541,12 +687,9 @@ void display()
     glPopMatrix();
 
     // draw_cylinder(5,10);
-
     // drawTriangle();
     // draw_octahedron();
-
     // draw_sphere();
-
     // draw_sphere_slice();
     // glScalef(currentSphereRadius, currentSphereRadius, currentSphereRadius);
     // drawOneFace(6);
@@ -556,6 +699,9 @@ void display()
 
 void init()
 {
+
+    // initialize all variables
+
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
@@ -583,7 +729,7 @@ void keyboardHandler(unsigned char key, int x, int y)
     switch (key)
     {
     case '1':
-        printf("1 pressed\n");
+        // printf("1 pressed\n");
         cameraRight.x = (cameraRight.x * cos(-rotation_angle)) + (cameraLook.x * sin(-rotation_angle));
         cameraRight.y = (cameraRight.y * cos(-rotation_angle)) + (cameraLook.y * sin(-rotation_angle));
         cameraRight.z = (cameraRight.z * cos(-rotation_angle)) + (cameraLook.z * sin(-rotation_angle));
@@ -593,7 +739,7 @@ void keyboardHandler(unsigned char key, int x, int y)
         cameraLook.z = (cameraLook.z * cos(-rotation_angle)) - (cameraRight.z * sin(-rotation_angle));
         break;
     case '2':
-        printf("2 pressed\n");
+        // printf("2 pressed\n");
         cameraRight.x = (cameraRight.x * cos(rotation_angle)) + (cameraLook.x * sin(rotation_angle));
         cameraRight.y = (cameraRight.y * cos(rotation_angle)) + (cameraLook.y * sin(rotation_angle));
         cameraRight.z = (cameraRight.z * cos(rotation_angle)) + (cameraLook.z * sin(rotation_angle));
@@ -604,7 +750,7 @@ void keyboardHandler(unsigned char key, int x, int y)
         break;
 
     case '3':
-        printf("3 pressed\n");
+        // printf("3 pressed\n");
         cameraLook.x = (cameraLook.x * cos(rotation_angle)) + (cameraUp.x * sin(rotation_angle));
         cameraLook.y = (cameraLook.y * cos(rotation_angle)) + (cameraUp.y * sin(rotation_angle));
         cameraLook.z = (cameraLook.z * cos(rotation_angle)) + (cameraUp.z * sin(rotation_angle));
@@ -614,7 +760,7 @@ void keyboardHandler(unsigned char key, int x, int y)
         cameraUp.z = (cameraUp.z * cos(rotation_angle)) - (cameraLook.z * sin(rotation_angle));
         break;
     case '4':
-        printf("4 pressed\n");
+        // printf("4 pressed\n");
         cameraLook.x = (cameraLook.x * cos(-rotation_angle)) + (cameraUp.x * sin(-rotation_angle));
         cameraLook.y = (cameraLook.y * cos(-rotation_angle)) + (cameraUp.y * sin(-rotation_angle));
         cameraLook.z = (cameraLook.z * cos(-rotation_angle)) + (cameraUp.z * sin(-rotation_angle));
@@ -624,7 +770,7 @@ void keyboardHandler(unsigned char key, int x, int y)
         cameraUp.z = (cameraUp.z * cos(-rotation_angle)) - (cameraLook.z * sin(-rotation_angle));
         break;
     case '5':
-        printf("5 pressed\n");
+        // printf("5 pressed\n");
         cameraUp.x = (cameraUp.x * cos(rotation_angle)) + (cameraRight.x * sin(rotation_angle));
         cameraUp.y = (cameraUp.y * cos(rotation_angle)) + (cameraRight.y * sin(rotation_angle));
         cameraUp.z = (cameraUp.z * cos(rotation_angle)) + (cameraRight.z * sin(rotation_angle));
@@ -634,7 +780,7 @@ void keyboardHandler(unsigned char key, int x, int y)
         cameraRight.z = (cameraRight.z * cos(rotation_angle)) - (cameraUp.z * sin(rotation_angle));
         break;
     case '6':
-        printf("6 pressed\n");
+        // printf("6 pressed\n");
         cameraUp.x = (cameraUp.x * cos(-rotation_angle)) + (cameraRight.x * sin(-rotation_angle));
         cameraUp.y = (cameraUp.y * cos(-rotation_angle)) + (cameraRight.y * sin(-rotation_angle));
         cameraUp.z = (cameraUp.z * cos(-rotation_angle)) + (cameraRight.z * sin(-rotation_angle));
@@ -644,7 +790,7 @@ void keyboardHandler(unsigned char key, int x, int y)
         cameraRight.z = (cameraRight.z * cos(-rotation_angle)) - (cameraUp.z * sin(-rotation_angle));
         break;
     case 'q':
-        printf("q pressed\n");
+        // printf("q pressed\n");
         exit(0);
         break;
     default:
@@ -658,37 +804,37 @@ void specialKeyHandler(int key, int x, int y)
     switch (key)
     {
     case GLUT_KEY_UP:
-        printf("UP pressed");
+        // printf("UP pressed");
         cameraPos.x += cameraLook.x;
         cameraPos.y += cameraLook.y;
         cameraPos.z += cameraLook.z;
         break;
     case GLUT_KEY_DOWN:
-        printf("DOWN pressed");
+        // printf("DOWN pressed");
         cameraPos.x -= cameraLook.x;
         cameraPos.y -= cameraLook.y;
         cameraPos.z -= cameraLook.z;
         break;
     case GLUT_KEY_LEFT:
-        printf("LEFT pressed");
+        // printf("LEFT pressed");
         cameraPos.y += cameraRight.y;
         cameraPos.x += cameraRight.x;
         cameraPos.z += cameraRight.z;
         break;
     case GLUT_KEY_RIGHT:
-        printf("RIGHT pressed");
+        // printf("RIGHT pressed");
         cameraPos.x -= cameraRight.x;
         cameraPos.y -= cameraRight.y;
         cameraPos.z -= cameraRight.z;
         break;
     case GLUT_KEY_PAGE_DOWN:
-        printf("PAGE_DOWN pressed");
+        // printf("PAGE_DOWN pressed");
         cameraPos.x -= cameraUp.x;
         cameraPos.y -= cameraUp.y;
         cameraPos.z -= cameraUp.z;
         break;
     case GLUT_KEY_PAGE_UP:
-        printf("PAGE_UP pressed");
+        // printf("PAGE_UP pressed");
         cameraPos.x += cameraUp.x;
         cameraPos.y += cameraUp.y;
         cameraPos.z += cameraUp.z;
@@ -704,7 +850,7 @@ int main(int argc, char **argv)
 {
     // printf("Hello World\n");
     glutInit(&argc, argv);
-    glutInitWindowSize(1000, 1000);
+    glutInitWindowSize(900, 900);
     glutInitWindowPosition(500, 500);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutCreateWindow("OpenGl Test");
@@ -718,8 +864,6 @@ int main(int argc, char **argv)
 
     glutIdleFunc(idle);
     glutTimerFunc(10, Timer, 0);
-
-
 
     glutMainLoop();
     return 0;
