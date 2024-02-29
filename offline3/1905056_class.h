@@ -25,6 +25,11 @@ class PointLight;
 class SpotLight;
 class Vector3D;
 
+extern vector<Objectt *> objects;
+extern vector<PointLight *> pointLightSources;
+extern vector<SpotLight *> spotLightSources;
+extern int recursionLevel;
+
 class Vector3D
 {
 public:
@@ -102,6 +107,68 @@ public:
     Vector3D normalize()
     {
         return dir / dir.length();
+    }
+};
+
+class PointLight
+{
+public:
+    Vector3D position;
+    double color[3];
+
+public:
+    PointLight()
+    {
+        position = Vector3D(0, 0, 0);
+        color[0] = 0;
+        color[1] = 0;
+        color[2] = 0;
+    }
+    PointLight(Vector3D position, double color[])
+    {
+        this->position = position;
+        this->color[0] = color[0];
+        this->color[1] = color[1];
+        this->color[2] = color[2];
+    }
+    void draw()
+    {
+        glPointSize(5);
+        glBegin(GL_POINTS);
+        {
+            glColor3f(color[0], color[1], color[2]);
+            glVertex3f(position.x, position.y, position.z);
+        }
+        glEnd();
+    }
+};
+
+class SpotLight : public PointLight
+{
+public:
+    Vector3D direction;
+    double angle;
+
+public:
+    SpotLight(Vector3D position, Vector3D direction, double color[], double angle)
+    {
+        this->position = position;
+        this->color[0] = color[0];
+        this->color[1] = color[1];
+        this->color[2] = color[2];
+        this->direction = direction;
+        this->angle = angle;
+    }
+
+    void draw()
+    {
+        glPointSize(10);
+        glBegin(GL_POINTS);
+        {
+            glColor3f(color[0], color[1], color[2]);
+            glVertex3f(position.x, position.y, position.z);
+        }
+        glEnd();
     }
 };
 
@@ -259,37 +326,6 @@ public:
         {
             return t;
         }
-        Vector3D intersection = start + dir * t;
-        Vector3D normal = intersection - reference_point;
-        normal = normal / normal.length();
-        double color[3];
-        for (int i = 0; i < 3; i++)
-        {
-            color[i] = co_efficients[0] * current_color[i];
-        }
-        for (int i = 0; i < 3; i++)
-        {
-            current_color[i] = color[i];
-        }
-        double lambert = 0;
-        for (int i = 0; i < 3; i++)
-        {
-            lambert += current_color[i] * color[i];
-        }
-        lambert = max(0.0, lambert);
-        double phong = 0;
-        Vector3D viewer = start - intersection;
-        viewer = viewer / viewer.length();
-        Vector3D reflection = dir - normal * 2 * dir.dot(normal);
-        reflection = reflection / reflection.length();
-        for (int i = 0; i < 3; i++)
-        {
-            phong += color[i] * pow(max(0.0, reflection.dot(viewer)), shine);
-        }
-        for (int i = 0; i < 3; i++)
-        {
-            current_color[i] = color[i] * co_efficients[1] + color[i] * co_efficients[2] * lambert + co_efficients[3] * phong;
-        }
         return t;
     }
 };
@@ -327,60 +363,27 @@ public:
         }
         glEnd();
     }
-
     double intersect(Ray r, double current_color[], int level)
     {
         Vector3D start = r.getStart();
         Vector3D dir = r.getDir();
-        Vector3D normal = (b - a).cross(c - a);
-        normal = normal / normal.length();
+        Vector3D normal = (b - a).cross(c - a).normalize();
         double t = normal.dot(a - start) / normal.dot(dir);
+
         if (t < 0)
-        {
             return -1;
-        }
+
         Vector3D intersection = start + dir * t;
         Vector3D cross1 = (b - a).cross(intersection - a);
         Vector3D cross2 = (c - b).cross(intersection - b);
         Vector3D cross3 = (a - c).cross(intersection - c);
-        if (cross1.dot(cross2) > 0 && cross2.dot(cross3) > 0)
+
+        if (normal.dot(cross1) > 0 && normal.dot(cross2) > 0 && normal.dot(cross3) > 0)
         {
             if (level == 0)
-            {
                 return t;
-            }
-            Vector3D normal = (b - a).cross(c - a);
-            normal = normal / normal.length();
-            double color[3];
-            for (int i = 0; i < 3; i++)
-            {
-                color[i] = co_efficients[0] * current_color[i];
-            }
-            for (int i = 0; i < 3; i++)
-            {
-                current_color[i] = color[i];
-            }
-            double lambert = 0;
-            for (int i = 0; i < 3; i++)
-            {
-                lambert += current_color[i] * color[i];
-            }
-            lambert = max(0.0, lambert);
-            double phong = 0;
-            Vector3D viewer = start - intersection;
-            viewer = viewer / viewer.length();
-            Vector3D reflection = dir - normal * 2 * dir.dot(normal);
-            reflection = reflection / reflection.length();
-            for (int i = 0; i < 3; i++)
-            {
-                phong += color[i] * pow(max(0.0, reflection.dot(viewer)), shine);
-            }
-            for (int i = 0; i < 3; i++)
-            {
-                current_color[i] = color[i] * co_efficients[1] + color[i] * co_efficients[2] * lambert + co_efficients[3] * phong + color[i] * co_efficients[1] + color[i] * co_efficients[2] * lambert + co_efficients[3] * phong;
-            }
-            return t;
         }
+
         return -1;
     }
 };
@@ -423,8 +426,32 @@ public:
     }
     double intersect(Ray r, double current_color[], int level)
     {
-        // printf("General Objectt Intersect\n");
-        return 0;
+
+        double A = a * r.getDir().x * r.getDir().x + b * r.getDir().y * r.getDir().y + c * r.getDir().z * r.getDir().z + d * r.getDir().x * r.getDir().y + e * r.getDir().y * r.getDir().z + f * r.getDir().z * r.getDir().x;
+        double B = 2 * (a * r.getStart().x * r.getDir().x + b * r.getStart().y * r.getDir().y + c * r.getStart().z * r.getDir().z + d * r.getStart().x * r.getDir().y + e * r.getStart().y * r.getDir().z + f * r.getStart().z * r.getDir().x + g * r.getDir().x + h * r.getDir().y + i * r.getDir().z);
+        double C = a * r.getStart().x * r.getStart().x + b * r.getStart().y * r.getStart().y + c * r.getStart().z * r.getStart().z + d * r.getStart().x * r.getStart().y + e * r.getStart().y * r.getStart().z + f * r.getStart().z * r.getStart().x + g * r.getStart().x + h * r.getStart().y + i * r.getStart().z + j;
+        double D = B * B - 4 * A * C;
+        if (D < 0)
+        {
+            return -1;
+        }
+        D = sqrt(D);
+        double t1 = (-B + D) / (2 * A);
+        double t2 = (-B - D) / (2 * A);
+        double t = min(t1, t2);
+        if (t < 0)
+        {
+            t = max(t1, t2);
+        }
+        if (t < 0)
+        {
+            return -1;
+        }
+        if (level == 0)
+        {
+            return t;
+        }
+        return t;
     }
 };
 
@@ -505,67 +532,5 @@ public:
             return -1;
         }
         return t;
-    }
-};
-
-class PointLight
-{
-protected:
-    Vector3D position;
-    double color[3];
-
-public:
-    PointLight()
-    {
-        position = Vector3D(0, 0, 0);
-        color[0] = 0;
-        color[1] = 0;
-        color[2] = 0;
-    }
-    PointLight(Vector3D position, double color[])
-    {
-        this->position = position;
-        this->color[0] = color[0];
-        this->color[1] = color[1];
-        this->color[2] = color[2];
-    }
-    void draw()
-    {
-        glPointSize(5);
-        glBegin(GL_POINTS);
-        {
-            glColor3f(color[0], color[1], color[2]);
-            glVertex3f(position.x, position.y, position.z);
-        }
-        glEnd();
-    }
-};
-
-class SpotLight : public PointLight
-{
-private:
-    Vector3D direction;
-    double angle;
-
-public:
-    SpotLight(Vector3D position, Vector3D direction, double color[], double angle)
-    {
-        this->position = position;
-        this->color[0] = color[0];
-        this->color[1] = color[1];
-        this->color[2] = color[2];
-        this->direction = direction;
-        this->angle = angle;
-    }
-
-    void draw()
-    {
-        glPointSize(10);
-        glBegin(GL_POINTS);
-        {
-            glColor3f(color[0], color[1], color[2]);
-            glVertex3f(position.x, position.y, position.z);
-        }
-        glEnd();
     }
 };
