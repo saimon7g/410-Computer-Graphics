@@ -280,11 +280,29 @@ void capture()
                 double *color = objects[nearest]->getColor();
                 image.set_pixel(i, j, color[0] * 255, color[1] * 255, color[2] * 255);
             }
+
+            delete[] color;
         }
     }
 
     image.save_image("output.bmp");
     printf("Image Captured\n");
+}
+void clearMemory()
+{
+    for (int i = 0; i < objects.size(); i++)
+    {
+        delete objects[i];
+    }
+    for (int i = 0; i < pointLightSources.size(); i++)
+    {
+        delete pointLightSources[i];
+    }
+    for (int i = 0; i < spotLightSources.size(); i++)
+    {
+        delete spotLightSources[i];
+    }
+    delete floorObj;
 }
 
 void display()
@@ -400,6 +418,7 @@ void keyboardHandler(unsigned char key, int x, int y)
         break;
     case 'q':
         // printf("q pressed\n");
+        clearMemory();
         exit(0);
         break;
     default:

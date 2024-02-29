@@ -131,6 +131,17 @@ public:
         this->color[1] = color[1];
         this->color[2] = color[2];
     }
+
+
+    // destructor for point light
+    ~PointLight()
+    {
+        // delete color;
+        delete this;
+    }
+
+
+
     void draw()
     {
         glPointSize(5);
@@ -158,6 +169,12 @@ public:
         this->color[2] = color[2];
         this->direction = direction;
         this->angle = angle;
+    }
+
+    // destructor for spot light
+    ~SpotLight()
+    {
+        delete this;
     }
 
     void draw()
@@ -234,6 +251,12 @@ public:
         shine = 0;
     }
 
+    // destructor for object
+    virtual ~Objectt()
+    {
+        delete this;
+    }
+
     virtual void draw()
     {
         cout << "Objectt Draw" << endl;
@@ -285,6 +308,15 @@ public:
         co_efficients[3] = 0;
         shine = 0;
     }
+
+    // destructor for sphere
+    ~Sphere()
+    {
+        // delete color;
+        // delete co_efficients;
+        delete this;
+    }
+
     void draw()
     {
         // draw a sphere center and radious
@@ -351,6 +383,16 @@ public:
         co_efficients[3] = 0;
         shine = 0;
     }
+    // destructor for triangle
+    ~Triangle()
+    {
+        // delete color;
+        // delete co_efficients;
+        delete this;
+    }
+
+
+
     void draw()
     {
         // draw triangle
@@ -420,6 +462,13 @@ public:
         co_efficients[3] = 0;
         shine = 0;
     }
+    // destructor for general object
+    ~GeneralObjectt()
+    {
+        // delete color;
+        // delete co_efficients;
+        delete this;
+    }
     void draw()
     {
         // printf("General Objectt\n");
@@ -472,6 +521,14 @@ public:
         co_efficients[2] = 0;
         co_efficients[3] = 0;
         shine = 0;
+    }
+    // destructor for floor
+    ~Floor()
+    {
+        // delete color;
+        // delete co_efficients;
+        delete this;
+
     }
     void draw()
     {
